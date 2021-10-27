@@ -1,5 +1,3 @@
-import button as button
-from colorama import init, Fore
 from pygame import RLEACCEL
 
 if __name__ == '__main__':
@@ -62,8 +60,9 @@ if __name__ == '__main__':
     class Enemy(pygame.sprite.Sprite):
         def __init__(self):
             super(Enemy, self).__init__()
-            self.surf = pygame.image.load("missile.png").convert()
+            self.surf = pygame.image.load("misile_v1.png").convert()
             self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+            self.surf.set_colorkey((0, 0, 0), RLEACCEL)
             self.rect = self.surf.get_rect(
                 center=(
                     random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),
@@ -75,8 +74,14 @@ if __name__ == '__main__':
         # Move the sprite based on speed
         # Remove the sprite when it passes the left edge of the screen
         def update(self):
+            global score
             self.rect.move_ip(-self.speed, 0)
             if self.rect.right < 0:
+                for e in enemies:
+                    if e.rect.right <= 1:
+                        score += 10
+                        # if score%500 == 0:
+                        # nivel+ =1:
                 self.kill()
 
 
@@ -84,7 +89,7 @@ if __name__ == '__main__':
     class Cloud(pygame.sprite.Sprite):
         def __init__(self):
             super(Cloud, self).__init__()
-            self.surf = pygame.image.load("cloud.png").convert()
+            self.surf = pygame.image.load("nube_v1.png").convert()
             self.surf.set_colorkey((0, 0, 0), RLEACCEL)
             self.rect = self.surf.get_rect(
                 center=(
@@ -100,13 +105,17 @@ if __name__ == '__main__':
                 self.kill()
 
 
-    def pausa(letras, gameDisplay):
-        #pausa = true
-        pauseText = pygame.font.SysFont(115)
-        TextSurf, TextRect = letras("Pausa", pauseText)
-        TextRect.center = ((SCREEN_WIDTH/2),(SCREEN_HEIGHT/2))
-        gameDisplay.blit(TextSurf, TextRect)
+    # Primer ejercicio
+    def marcador(surface, text, size, x, y):
+        font = pygame.font.SysFont("serif", size)  # fuente del marcador
+        text_surface = font.render(text, True, (50, 50, 100))  # color y tamaño de la letra
+        text_rect = text_surface.get_rect();
+        text_rect.midright = (x, y)
+        surface.blit(text_surface, text_rect)
 
+
+    global score
+    score = 0;
 
     # Define constants for the screen width and height
     SCREEN_WIDTH = 1920
@@ -143,6 +152,8 @@ if __name__ == '__main__':
     # Load and play background music
     pygame.mixer.music.load("Apoxode_-_Electric_1.ogg")
     pygame.mixer.music.play(loops=-1)  # Se reproduzca infinitamente
+    pygame.mixer.music.set_volume(0.1)  # volumen del juego
+
     # Load all sound files
     # Sound sources: Jon Fincher
     move_up_sound = pygame.mixer.Sound("Rising_putter.ogg")
@@ -171,18 +182,6 @@ if __name__ == '__main__':
                 # if the DOWN_KEY is pressed, then it will sound the up sound
                 if event.key == K_DOWN:
                     move_down_sound.play()
-
-            if event.type == KEYDOWN:
-                if event.key == K_m:
-                    pygame.quit()
-                    quit()
-
-                    # Para poner el fondo blanco cuando pulsas pausa
-                    # gameDisplay.fill(white)
-
-                    # botones de continuar y salir
-                    # button("Continuar?", 150, 450, 100, 50, Fore.green, Fore.bright_green, true)
-                button("Quit", 550, 450, 100, 50, Fore.red, Fore.bright_red, QUIT)
 
             elif event.type == QUIT:
                 running = False
@@ -226,6 +225,7 @@ if __name__ == '__main__':
             player.kill()
             running = False
 
+        marcador(screen, str(score), 50, 1870, 30)
         # Update the display
         pygame.display.flip()
 
