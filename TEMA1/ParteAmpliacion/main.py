@@ -1,3 +1,7 @@
+import os
+import sqlite3
+from sqlite3 import Error
+
 from pygame import RLEACCEL
 
 if __name__ == '__main__':
@@ -5,10 +9,6 @@ if __name__ == '__main__':
     import pygame
     # Import random for random numbers
     import random
-
-    # Initialize pygame
-    pygame.init()
-
     # Import pygame.locals for easier access to key coordinates
     # Updated to conform to flake8 and black standards
     from pygame.locals import (
@@ -22,9 +22,17 @@ if __name__ == '__main__':
         QUIT
     )
 
+    # Initialize pygame
+    pygame.init()
+
+    # rutas
+    directorio_carpeta = os.path.dirname(__file__)
+    ruta_max_score = os.path.join(directorio_carpeta, "puntuacion.db")
+
 
     # Define a Player object by extending pygame.sprite.Sprite
     # The surface drawn on the screen is now an attribute of 'player'
+
     class Player(pygame.sprite.Sprite):
         def __init__(self):
             super(Player, self).__init__()
@@ -55,8 +63,13 @@ if __name__ == '__main__':
                 self.rect.bottom = SCREEN_HEIGHT
 
 
+    score = 0
+    nivel = 1
+
+
     # Define the enemy object by extending pygame.sprite.Sprite
     # The surface you draw on the screen is now an attribute of 'enemy'
+
     class Enemy(pygame.sprite.Sprite):
         def __init__(self):
             super(Enemy, self).__init__()
@@ -69,23 +82,26 @@ if __name__ == '__main__':
                     random.randint(0, SCREEN_HEIGHT),
                 )
             )
-            self.speed = random.randint(5, 20)
+            self.speed = random.randint(2 * nivel, 10 + 3 * nivel)
+            # velocidad enemigos
 
         # Move the sprite based on speed
         # Remove the sprite when it passes the left edge of the screen
         def update(self):
             global score
+            global nivel
             self.rect.move_ip(-self.speed, 0)
             if self.rect.right < 0:
                 for e in enemies:
                     if e.rect.right <= 1:
                         score += 10
-                        # if score%500 == 0:
-                        # nivel+ =1:
+                        if score % 500 == 0:
+                            nivel += 1
                 self.kill()
 
 
     # Creating cloud class
+
     class Cloud(pygame.sprite.Sprite):
         def __init__(self):
             super(Cloud, self).__init__()
@@ -94,10 +110,9 @@ if __name__ == '__main__':
             self.rect = self.surf.get_rect(
                 center=(
                     random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),
-                    random.randint(0, SCREEN_HEIGHT),
+                    random.randint(20, SCREEN_HEIGHT)
                 )
             )
-            self.speed = random.randint(5, 20)
 
         def update(self):
             self.rect.move_ip(-5, 0)
@@ -105,131 +120,202 @@ if __name__ == '__main__':
                 self.kill()
 
 
-    # Primer ejercicio
-    def marcador(surface, text, size, x, y):
+    # Primer ejercicio y nivel
+
+    def marcador(surface, text, text2, size, x, y):
         font = pygame.font.SysFont("serif", size)  # fuente del marcador
-        text_surface = font.render(text, True, (50, 50, 100))  # color y tamaño de la letra
-        text_rect = text_surface.get_rect();
+        text_surface = font.render("{} : {}".format(text, text2), True,
+                                   (50, 50, 100))  # color y tamaño de la letra
+        # text_dia_noche = font.render("{}".format(text), True, color=list(random.choice(range(256))))
+        text_rect = text_surface.get_rect()
         text_rect.midright = (x, y)
         surface.blit(text_surface, text_rect)
 
 
-    global score
-    score = 0;
+    # Conexion DB
+    def connexion():
+        try:
+            sqliteConnection = sqlite3.connect((os.path.join(ruta_max_score)))
+            return sqliteConnection
+        except Error:
+            print(Error)
 
-    # Define constants for the screen width and height
-    SCREEN_WIDTH = 1920
-    SCREEN_HEIGHT = 1080
 
-    # Create the screen object
-    # The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    con = connexion()
 
-    # Create a custom event for adding a new enemy
-    ADDENEMY = pygame.USEREVENT + 1
-    pygame.time.set_timer(ADDENEMY, 250)
 
-    ADDCLOUD = pygame.USEREVENT + 2
-    pygame.time.set_timer(ADDCLOUD, 1000)
+    # insertar datos para nueva puntuacion
+    def sql_insert(score):
+        cursorobj = con.cursos()
+        if leersql() == 0:
+            cursorobj.execute(
+                'INSERT INTO puntuacion VALUES({})'.format(score))
+        if leersql > score:
+            return
+        else:
+            updatesql()
 
-    # Instantiate player. Right now, this is just a rectangle.
-    player = Player()
+        con.comit()
 
-    # Create groups to hold enemy sprites and all sprites
-    # - enemies is used for collision detection and position updates
-    # - all_sprites is used for rendering
-    enemies = pygame.sprite.Group()
-    clouds = pygame.sprite.Group()
-    all_sprites = pygame.sprite.Group()
-    all_sprites.add(player)
 
-    # Setup the clock for a decent framerate
-    clock = pygame.time.Clock()
+    def leersql():
+        cursor = con.cursor()
+        cursor.execute("SELECT score FROM puntuacion")
+        row = cursor.fetchone()
+        return row[0]
 
-    # Setup fr sounds.Default are good.
-    pygame.mixer.init()
 
-    # Load and play background music
-    pygame.mixer.music.load("Apoxode_-_Electric_1.ogg")
-    pygame.mixer.music.play(loops=-1)  # Se reproduzca infinitamente
-    pygame.mixer.music.set_volume(0.1)  # volumen del juego
+    def updatesql():
+        curs = con.cursor()
+        if leersql() > score:
+            print("Soy una mierda y nose hacer mas puntos"
+                  + "\n--------------------------------------------"
+                  + "\nPuntuacion: " + str(score)
+                  )
+        if leersql() < score:
+            curs.execute("Update puntuacion set score = " + str(score))
+            print("Nueva puntuacion mas alta: ", score)
+            curs.execute("select * from puntuacion")
+            con.commit()
 
-    # Load all sound files
-    # Sound sources: Jon Fincher
-    move_up_sound = pygame.mixer.Sound("Rising_putter.ogg")
-    move_down_sound = pygame.mixer.Sound("Falling_putter.ogg")
-    collision_sound = pygame.mixer.Sound("Collision.ogg")
+# Define constants for the screen width and height
+SCREEN_WIDTH = 1920
+SCREEN_HEIGHT = 1080
 
-    # Variable to keep the main loop running
-    running = True
+# Create the screen object
+# The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-    # Main loop
-    while running:
-        # for loop through the event queue
-        for event in pygame.event.get():
-            # Check for KEYDOWN event
-            if event.type == KEYDOWN:
-                # If the Esc key is pressed, then exit the main loop
-                if event.key == K_ESCAPE:
-                    running = False
-            # Check for QUIT event. If QUIT, then set running to false.
-            if event.type == KEYDOWN:
-                # if the UP_KEY is pressed, then it will sound the up sound
-                if event.key == K_UP:
-                    move_up_sound.play()
+# Create a custom event for adding a new enemy
+ADDENEMY = pygame.USEREVENT + 1
+# UPDATE ENEMY
+velEne = int(200 + (150 / nivel))
+pygame.time.set_timer(ADDENEMY, velEne)
 
-            if event.type == KEYDOWN:
-                # if the DOWN_KEY is pressed, then it will sound the up sound
-                if event.key == K_DOWN:
-                    move_down_sound.play()
+ADDCLOUD = pygame.USEREVENT + 2
+pygame.time.set_timer(ADDCLOUD, 1000)
 
-            elif event.type == QUIT:
+# Cambio de fondo del juego
+ADDTIME = pygame.USEREVENT + 3
+pygame.time.set_timer(ADDTIME, 20000)
+
+rgb_current = (135, 206, 250)
+background = True
+
+# Instantiate player. Right now, this is just a rectangle.
+player = Player()
+
+# Create groups to hold enemy sprites and all sprites
+# - enemies is used for collision detection and position updates
+# - all_sprites is used for rendering
+enemies = pygame.sprite.Group()
+clouds = pygame.sprite.Group()
+all_sprites = pygame.sprite.Group()
+all_sprites.add(player)
+
+# Setup the clock for a decent framerate
+clock = pygame.time.Clock()
+
+# Setup fr sounds.Default are good.
+pygame.mixer.init()
+
+# Load and play background music
+pygame.mixer.music.load("Apoxode_-_Electric_1.ogg")
+pygame.mixer.music.play(loops=-1)  # Se reproduzca infinitamente
+pygame.mixer.music.set_volume(0.1)  # volumen del juego
+
+# Load all sound files
+# Sound sources: Jon Fincher
+move_up_sound = pygame.mixer.Sound("Rising_putter.ogg")
+move_down_sound = pygame.mixer.Sound("Falling_putter.ogg")
+collision_sound = pygame.mixer.Sound("Collision.ogg")
+
+# Variable to keep the main loop running
+running = True
+
+# Main loop
+while running:
+    # for loop through the event queue
+    for event in pygame.event.get():
+        # Check for KEYDOWN event
+        if event.type == KEYDOWN:
+            # If the Esc key is pressed, then exit the main loop
+            if event.key == K_ESCAPE:
                 running = False
-            # Add a new enemy?
-            elif event.type == ADDENEMY:
-                # Create the new enemy and add it to sprite groups
-                new_enemy = Enemy()
-                enemies.add(new_enemy)
-                all_sprites.add(new_enemy)
-            # Add a new cloud
-            elif event.type == ADDCLOUD:
-                # Create the new cloud and add it to sprite groups
-                new_cloud = Cloud()
-                clouds.add(new_cloud)
-                all_sprites.add(new_cloud)
+        # Check for QUIT event. If QUIT, then set running to false.
+        if event.type == KEYDOWN:
+            # if the UP_KEY is pressed, then it will sound the up sound
+            if event.key == K_UP:
+                move_up_sound.play()
 
-        # Get the set of keys pressed and check for user input
-        pressed_keys = pygame.key.get_pressed()
-        player.update(pressed_keys)
+        if event.type == KEYDOWN:
+            # if the DOWN_KEY is pressed, then it will sound the up sound
+            if event.key == K_DOWN:
+                move_down_sound.play()
 
-        # update cloud position
-        clouds.update()
-
-        # Update enemy position
-        enemies.update()
-
-        # Update the player sprite based on user keypresses
-        player.update(pressed_keys)
-
-        # Fill the screen with black
-        screen.fill((135, 206, 250))
-
-        # Draw all sprites
-        for entity in all_sprites:
-            screen.blit(entity.surf, entity.rect)
-
-        # Check if any enemies have collided with the player
-        if pygame.sprite.spritecollideany(player, enemies):
-            # If so, then remove the player and stop the loop
-            collision_sound.play()
-            player.kill()
+        elif event.type == QUIT:
             running = False
+        # Add a new enemy?
+        elif event.type == ADDENEMY:
+            # Create the new enemy and add it to sprite groups
+            new_enemy = Enemy()
+            enemies.add(new_enemy)
+            all_sprites.add(new_enemy)
+        # Add a new cloud
+        elif event.type == ADDCLOUD:
+            # Create the new cloud and add it to sprite groups
+            new_cloud = Cloud()
+            clouds.add(new_cloud)
+            all_sprites.add(new_cloud)
+        # Add a new background color
+        elif event.type == ADDTIME:
+            if background is True:
+                background = False
+                rgb_current = (16, 44, 84)
+            elif background is False:
+                background = True
+                rgb_current = (135, 206, 250)
 
-        marcador(screen, str(score), 50, 1870, 30)
-        # Update the display
-        pygame.display.flip()
+    screen.fill((rgb_current))
 
-        clock.tick(60)
+    # Get the set of keys pressed and check for user input
+    pressed_keys = pygame.key.get_pressed()
+    player.update(pressed_keys)
+
+    # update cloud position
+    clouds.update()
+
+    # Update enemy position
+    enemies.update()
+
+    # Update the player sprite based on user keypresses
+    player.update(pressed_keys)
+
+    # Draw all sprites
+    for entity in all_sprites:
+        screen.blit(entity.surf, entity.rect)
+
+    # COLISION
+    # Check if any enemies have collided with the player
+    if pygame.sprite.spritecollideany(player, enemies):
+        # If so, then remove the player and stop the loop
+        collision_sound.play()
+        connexion()
+        print("\n--------------------------------------------")
+        print("Puntuacion mas alta", leersql())
+        print("--------------------------------------------")
+        updatesql()
+
+        player.kill()
+        running = False
+
+    marcador(screen, "Score ", str(score), 35, 1870, 30)
+    marcador(screen, "Nivel ", str(nivel), 35, 1870, 80)
+
+    # Update the display
+    pygame.display.flip()
+
+    clock.tick(60)
 
 # All done! Stop and quit the mixer.
 pygame.mixer.music.stop()
