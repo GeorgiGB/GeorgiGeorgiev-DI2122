@@ -18,6 +18,7 @@ if __name__ == '__main__':
         K_RIGHT,
         K_ESCAPE,
         KEYDOWN,
+        K_p,
         K_m,
         QUIT
     )
@@ -105,7 +106,11 @@ if __name__ == '__main__':
     class Cloud(pygame.sprite.Sprite):
         def __init__(self):
             super(Cloud, self).__init__()
-            self.surf = pygame.image.load("nube_v1.png").convert()
+            if background == True:
+                self.surf = pygame.image.load("nube_v1.png").convert()
+            elif background == False:
+                self.surf = pygame.image.load("estrella.png").convert()
+
             self.surf.set_colorkey((0, 0, 0), RLEACCEL)
             self.rect = self.surf.get_rect(
                 center=(
@@ -168,9 +173,10 @@ if __name__ == '__main__':
     def updatesql():
         curs = con.cursor()
         if leersql() > score:
-            print("Soy una mierda y nose hacer mas puntos"
+            print("Puntuacion actual"
                   + "\n--------------------------------------------"
-                  + "\nPuntuacion: " + str(score)
+                  + "\n>>>>: " + str(score)
+                  + "\n--------------------------------------------"
                   )
         if leersql() < score:
             curs.execute("Update puntuacion set score = " + str(score))
@@ -197,7 +203,7 @@ pygame.time.set_timer(ADDCLOUD, 1000)
 
 # Cambio de fondo del juego
 ADDTIME = pygame.USEREVENT + 3
-pygame.time.set_timer(ADDTIME, 20000)
+pygame.time.set_timer(ADDTIME, 10000)
 
 rgb_current = (135, 206, 250)
 background = True
@@ -222,7 +228,6 @@ pygame.mixer.init()
 # Load and play background music
 pygame.mixer.music.load("Apoxode_-_Electric_1.ogg")
 pygame.mixer.music.play(loops=-1)  # Se reproduzca infinitamente
-pygame.mixer.music.set_volume(0.1)  # volumen del juego
 
 # Load all sound files
 # Sound sources: Jon Fincher
@@ -230,8 +235,43 @@ move_up_sound = pygame.mixer.Sound("Rising_putter.ogg")
 move_down_sound = pygame.mixer.Sound("Falling_putter.ogg")
 collision_sound = pygame.mixer.Sound("Collision.ogg")
 
-# Variable to keep the main loop running
+move_down_sound.set_volume(0.1)
+move_up_sound.set_volume(0.1)
+collision_sound.set_volume(0.1)
+pygame.mixer.music.set_volume(0.1)  # volumen del juego
+
+font_intro = pygame.font.SysFont("serif", 30)
+
+intro = True
+end = True
 running = True
+
+# Menu intro
+while intro:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            quit()
+
+    screen.fill((253, 253, 150))
+    intro_label = font_intro.render("Press p to play", 1, (0, 0, 0))
+    screen.blit(intro_label, (600, 200))
+
+    ult_score = font_intro.render(f"Puntuacion mas alta: {leersql()}",1,(0,0,0))
+    screen.blit(ult_score, (600, 300))  # el primero es Y y el segundo es X
+
+    salir = font_intro.render("Pulsa ESC para salir del juego",1,(0,0,0))
+    screen.blit(salir, (20, 20))
+
+    tecla = pygame.key.get_pressed()
+
+    if tecla[pygame.K_p]:
+        intro = False
+    if tecla[pygame.K_ESCAPE]:
+        intro = False
+        running = False
+    pygame.display.update()
+
+# Variable to keep the main loop running
 
 # Main loop
 while running:
@@ -261,13 +301,7 @@ while running:
             new_enemy = Enemy()
             enemies.add(new_enemy)
             all_sprites.add(new_enemy)
-        # Add a new cloud
-        elif event.type == ADDCLOUD:
-            # Create the new cloud and add it to sprite groups
-            new_cloud = Cloud()
-            clouds.add(new_cloud)
-            all_sprites.add(new_cloud)
-        # Add a new background color
+            # Add a new background color
         elif event.type == ADDTIME:
             if background is True:
                 background = False
@@ -275,6 +309,15 @@ while running:
             elif background is False:
                 background = True
                 rgb_current = (135, 206, 250)
+        # Add a new cloud
+        elif event.type == ADDCLOUD:
+            # Create the new cloud and add it to sprite groups
+            new_cloud = Cloud()
+            clouds.add(new_cloud)
+            all_sprites.add(new_cloud)
+
+
+
 
     screen.fill((rgb_current))
 
@@ -298,6 +341,8 @@ while running:
     # COLISION
     # Check if any enemies have collided with the player
     if pygame.sprite.spritecollideany(player, enemies):
+
+        #verlo en consola
         # If so, then remove the player and stop the loop
         collision_sound.play()
         connexion()
@@ -305,19 +350,47 @@ while running:
         print("Puntuacion mas alta", leersql())
         print("--------------------------------------------")
         updatesql()
-
         player.kill()
+
+
+        #menu final
+        while end:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    quit()
+
+            screen.fill((0, 0, 0))
+            intro_label = font_intro.render("GAME OVER", 1, (110, 110, 110))
+            screen.blit(intro_label, (600, 200))
+
+            ult_score = font_intro.render(f"Ultima puntuacion:{leersql()}", 1, (110, 110, 110))
+            screen.blit(ult_score, (600, 300))  # el primero es Y y el segundo es X
+
+            puntuacion_actual = font_intro.render(f"Score en esta partida:{score}", 1, (110, 110, 110))
+            screen.blit(puntuacion_actual, (600, 400))
+
+            salir = font_intro.render("Pulsa ESC para salir del juego", 1, (110, 110, 110))
+            screen.blit(salir, (20, 20))
+
+            tecla = pygame.key.get_pressed()
+
+            if tecla[pygame.K_ESCAPE] or tecla[pygame.K_p]:
+                end = False
+            pygame.display.update()
+
         running = False
+        pygame.display.update()
 
     marcador(screen, "Score ", str(score), 35, 1870, 30)
     marcador(screen, "Nivel ", str(nivel), 35, 1870, 80)
+
+
 
     # Update the display
     pygame.display.flip()
 
     clock.tick(60)
 
-# All done! Stop and quit the mixer.
 pygame.mixer.music.stop()
 pygame.mixer.quit()
 pygame.quit()
