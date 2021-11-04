@@ -20,12 +20,15 @@ if __name__ == '__main__':
         KEYDOWN,
         K_p,
         K_m,
+        K_SPACE,
         QUIT
     )
 
     # Initialize pygame
     pygame.init()
 
+    score = 0
+    nivel = 1
     # rutas
     directorio_carpeta = os.path.dirname(__file__)
     ruta_max_score = os.path.join(directorio_carpeta, "puntuacion.db")
@@ -40,18 +43,25 @@ if __name__ == '__main__':
             self.surf = pygame.image.load("diminisher.png").convert()
             self.surf.set_colorkey((255, 255, 255), RLEACCEL)
             self.rect = self.surf.get_rect()
+            # Velocidad de lanzamiento de los misiles
+            self.velLanzamiento = 600
+            self.last_misil = pygame.time.get_ticks()
 
         # Move the sprite based on user keypresses
         def update(self, pressed_keys):
             if pressed_keys[K_UP]:
                 self.rect.move_ip(0, -5)
-
             if pressed_keys[K_DOWN]:
                 self.rect.move_ip(0, 5)
             if pressed_keys[K_LEFT]:
                 self.rect.move_ip(-5, 0)
             if pressed_keys[K_RIGHT]:
                 self.rect.move_ip(5, 0)
+            if pressed_keys[K_SPACE]:
+                action = pygame.time.get_ticks()  # Momento en el que la nave dispara
+                if action - self.last_misil > self.velLanzamiento:
+                    self.disparoMisil()
+                    self.last_misil = action
 
             # Keep player on the screen
             if self.rect.left < 0:
@@ -63,21 +73,34 @@ if __name__ == '__main__':
             if self.rect.bottom >= SCREEN_HEIGHT:
                 self.rect.bottom = SCREEN_HEIGHT
 
+        def disparoMisil(self):
+            municion = Misiles(self.rect.centerx, self.rect.centery)
+            misil.add(municion)
 
-    score = 0
-    nivel = 1
+    class Misiles(pygame.sprite.Sprite):
+        def __init__(self, x, y):
+            super(Misiles, self).__init__()
+            self.image = pygame.image.load(("missile.png")).convert()
+            self.image.set_colorkey((0, 0, 0), RLEACCEL)
+            self.rect = self.image.get_rect()
+            self.rect.centerx = x + 10
+            self.rect.bottom = y
+
+        def update(self):
+            self.rect.x += 15
+            if self.rect.bottom < SCREEN_WIDTH:
+                self.kill()
 
 
     # Define the enemy object by extending pygame.sprite.Sprite
     # The surface you draw on the screen is now an attribute of 'enemy'
-
     class Enemy(pygame.sprite.Sprite):
         def __init__(self):
             super(Enemy, self).__init__()
             if background == True:
-                self.surf = pygame.image.load("misile_v1.png").convert()
+                self.surf = pygame.image.load("misile_v1.png").convert()  # De dia misil
             elif background == False:
-                self.surf = pygame.image.load("alien_green.png").convert()
+                self.surf = pygame.image.load("alien_green.png").convert()  # De noche aliens
                 self.surf.set_colorkey((255, 255, 255), RLEACCEL)
             self.surf.set_colorkey((0, 0, 0), RLEACCEL)
             self.rect = self.surf.get_rect(
@@ -110,16 +133,16 @@ if __name__ == '__main__':
         def __init__(self):
             super(Cloud, self).__init__()
             if background == True:
-                self.surf = pygame.image.load("nube_v1.png").convert()
+                self.surf = pygame.image.load("nube_v1.png").convert()  # De dia nubes
             elif background == False:
-                self.surf = pygame.image.load("estrella.png").convert()
+                self.surf = pygame.image.load("estrella.png").convert()  # De noches "estrellas"
                 self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
             self.surf.set_colorkey((0, 0, 0), RLEACCEL)
             self.rect = self.surf.get_rect(
                 center=(
-                    random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),
-                    random.randint(20, SCREEN_HEIGHT)
+                    random.randint(SCREEN_WIDTH + 60, SCREEN_WIDTH + 150),
+                    random.randint(20, SCREE    N_HEIGHT)
                 )
             )
 
@@ -129,17 +152,19 @@ if __name__ == '__main__':
                 self.kill()
 
 
-    # Primer ejercicio y nivel
 
+    # Primer ejercicio y nivel
     def marcador(surface, text, text2, size, x, y):
         font = pygame.font.SysFont("serif", size)  # fuente del marcador
         text_surface = font.render("{} : {}".format(text, text2), True,
                                    (50, 50, 100))  # color y tamaño de la letra
-        # text_dia_noche = font.render("{}".format(text), True, color=list(random.choice(range(256))))
         text_rect = text_surface.get_rect()
         text_rect.midright = (x, y)
         surface.blit(text_surface, text_rect)
 
+
+    # Parte SQL
+    # Python tiene implementados metodos propios para la conexion SQL pero ya habia creado las definiciones
 
     # Conexion DB
     def connexion():
@@ -174,6 +199,8 @@ if __name__ == '__main__':
         return row[0]
 
 
+    # Actualizamos el score con la puntuacion mas alta,
+    # si en la partida actual la puntuacion no supera a la puntuacion guardada no se sobreescribiria
     def updatesql():
         curs = con.cursor()
         if leersql() > score:
@@ -196,18 +223,28 @@ SCREEN_HEIGHT = 1080
 # The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
+# Fondo oscuro
+modo_noche = pygame.image.load("nightmode.png")
+
+# Fondo de dia
+modo_dia = pygame.image.load("daymode.png")
+
 # Create a custom event for adding a new enemy
 ADDENEMY = pygame.USEREVENT + 1
 # UPDATE ENEMY
 velEne = int(200 + (150 / nivel))
 pygame.time.set_timer(ADDENEMY, velEne)
 
+# Aparicion de objetos que no eliminan al jugador
 ADDCLOUD = pygame.USEREVENT + 2
 pygame.time.set_timer(ADDCLOUD, 1000)
 
 # Cambio de fondo del juego
 ADDTIME = pygame.USEREVENT + 3
 pygame.time.set_timer(ADDTIME, 10000)
+
+ADDMISIL = pygame.USEREVENT + 4
+pygame.time.set_timer(ADDMISIL, 2000)
 
 rgb_current = (135, 206, 250)
 background = True
@@ -220,6 +257,7 @@ player = Player()
 # - all_sprites is used for rendering
 enemies = pygame.sprite.Group()
 clouds = pygame.sprite.Group()
+misil = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
 
@@ -257,6 +295,7 @@ while intro:
             quit()
 
     screen.fill((253, 253, 150))
+
     intro_label = font_intro.render("Press p to play", 1, (0, 0, 0))
     screen.blit(intro_label, (600, 200))
 
@@ -276,9 +315,9 @@ while intro:
     pygame.display.update()
 
 # Variable to keep the main loop running
-
 # Main loop
 while running:
+
     # for loop through the event queue
     for event in pygame.event.get():
         # Check for KEYDOWN event
@@ -299,20 +338,23 @@ while running:
 
         elif event.type == QUIT:
             running = False
-        # Add a new enemy?
+        # Add a new enemy
         elif event.type == ADDENEMY:
             # Create the new enemy and add it to sprite groups
             new_enemy = Enemy()
             enemies.add(new_enemy)
             all_sprites.add(new_enemy)
-            # Add a new background color
+
+        # Add a new background
         elif event.type == ADDTIME:
-            if background is True:
-                background = False
-                rgb_current = (37, 40, 80)
-            elif background is False:
+            if background is False:  # dia
                 background = True
                 rgb_current = (135, 206, 250)
+                # screen.blit(modo_noche, (0, 0))
+            elif background is True:  # noche
+                background = False
+                rgb_current = (37, 40, 80)
+                # screen.blit(modo_dia, (0, 0))
         # Add a new cloud
         elif event.type == ADDCLOUD:
             # Create the new cloud and add it to sprite groups
@@ -320,9 +362,9 @@ while running:
             clouds.add(new_cloud)
             all_sprites.add(new_cloud)
 
-    screen.fill((rgb_current))
+    screen.fill(rgb_current)
 
-    # Get the set of keys pressed and check for user input
+# Get the set of keys pressed and check for user input
     pressed_keys = pygame.key.get_pressed()
     player.update(pressed_keys)
 
@@ -340,6 +382,12 @@ while running:
         screen.blit(entity.surf, entity.rect)
 
     # COLISION
+    choque = pygame.sprite.groupcollide(misil, enemies, True, True)
+
+    # Acumulador de puntos cuando un misil impacta con un enemigo
+    if choque:
+        score += 10
+
     # Check if any enemies have collided with the player
     if pygame.sprite.spritecollideany(player, enemies):
 
