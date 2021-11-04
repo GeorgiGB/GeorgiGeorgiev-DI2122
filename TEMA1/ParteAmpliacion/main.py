@@ -74,13 +74,13 @@ if __name__ == '__main__':
                 self.rect.bottom = SCREEN_HEIGHT
 
         def disparoMisil(self):
-            municion = Misiles(self.rect.centerx, self.rect.centery)
-            misil.add(municion)
+            muni = Missiles(self.rect.centerx, self.rect.centery) #municion
+            misil.add(muni)
 
-    class Misiles(pygame.sprite.Sprite):
+    class Missiles(pygame.sprite.Sprite):
         def __init__(self, x, y):
-            super(Misiles, self).__init__()
-            self.image = pygame.image.load(("missile.png")).convert()
+            super().__init__()
+            self.image = pygame.image.load(("laser.png")).convert()
             self.image.set_colorkey((0, 0, 0), RLEACCEL)
             self.rect = self.image.get_rect()
             self.rect.centerx = x + 10
@@ -88,7 +88,7 @@ if __name__ == '__main__':
 
         def update(self):
             self.rect.x += 15
-            if self.rect.bottom < SCREEN_WIDTH:
+            if self.rect.bottom < 0:
                 self.kill()
 
 
@@ -373,6 +373,11 @@ while running:
 
     # Update enemy position
     enemies.update()
+
+    #Update misiles
+    misil.update()
+
+    misil.draw(screen)
 
     # Update the player sprite based on user keypresses
     player.update(pressed_keys)
