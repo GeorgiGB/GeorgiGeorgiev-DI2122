@@ -77,8 +77,8 @@ if __name__ == '__main__':
             if background == True:
                 self.surf = pygame.image.load("misile_v1.png").convert()
             elif background == False:
-                self.surf = pygame.image.load("alien.png").convert()
-            self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+                self.surf = pygame.image.load("alien_green.png").convert()
+                self.surf.set_colorkey((255, 255, 255), RLEACCEL)
             self.surf.set_colorkey((0, 0, 0), RLEACCEL)
             self.rect = self.surf.get_rect(
                 center=(
