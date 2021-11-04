@@ -37,7 +37,7 @@ if __name__ == '__main__':
     class Player(pygame.sprite.Sprite):
         def __init__(self):
             super(Player, self).__init__()
-            self.surf = pygame.image.load("jet.png").convert()
+            self.surf = pygame.image.load("diminisher.png").convert()
             self.surf.set_colorkey((255, 255, 255), RLEACCEL)
             self.rect = self.surf.get_rect()
 
@@ -113,7 +113,7 @@ if __name__ == '__main__':
                 self.surf = pygame.image.load("nube_v1.png").convert()
             elif background == False:
                 self.surf = pygame.image.load("estrella.png").convert()
-                self.surf.set_colorkey((255,255,255), RLEACCEL)
+                self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
             self.surf.set_colorkey((0, 0, 0), RLEACCEL)
             self.rect = self.surf.get_rect(
@@ -260,10 +260,10 @@ while intro:
     intro_label = font_intro.render("Press p to play", 1, (0, 0, 0))
     screen.blit(intro_label, (600, 200))
 
-    ult_score = font_intro.render(f"Puntuacion mas alta: {leersql()}",1,(0,0,0))
+    ult_score = font_intro.render(f"Puntuacion mas alta: {leersql()}", 1, (0, 0, 0))
     screen.blit(ult_score, (600, 300))  # el primero es Y y el segundo es X
 
-    salir = font_intro.render("Pulsa ESC para salir del juego",1,(0,0,0))
+    salir = font_intro.render("Pulsa ESC para salir del juego", 1, (0, 0, 0))
     screen.blit(salir, (20, 20))
 
     tecla = pygame.key.get_pressed()
@@ -320,9 +320,6 @@ while running:
             clouds.add(new_cloud)
             all_sprites.add(new_cloud)
 
-
-
-
     screen.fill((rgb_current))
 
     # Get the set of keys pressed and check for user input
@@ -346,7 +343,7 @@ while running:
     # Check if any enemies have collided with the player
     if pygame.sprite.spritecollideany(player, enemies):
 
-        #verlo en consola
+        # verlo en consola
         # If so, then remove the player and stop the loop
         collision_sound.play()
         connexion()
@@ -356,8 +353,7 @@ while running:
         updatesql()
         player.kill()
 
-
-        #menu final
+        # menu final
         while end:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -387,8 +383,6 @@ while running:
 
     marcador(screen, "Score ", str(score), 35, 1870, 30)
     marcador(screen, "Nivel ", str(nivel), 35, 1870, 80)
-
-
 
     # Update the display
     pygame.display.flip()
