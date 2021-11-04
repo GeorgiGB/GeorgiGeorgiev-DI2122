@@ -37,7 +37,7 @@ if __name__ == '__main__':
     class Player(pygame.sprite.Sprite):
         def __init__(self):
             super(Player, self).__init__()
-            self.surf = pygame.image.load("diminisher.jpg").convert()
+            self.surf = pygame.image.load("jet.png").convert()
             self.surf.set_colorkey((255, 255, 255), RLEACCEL)
             self.rect = self.surf.get_rect()
 
@@ -74,7 +74,10 @@ if __name__ == '__main__':
     class Enemy(pygame.sprite.Sprite):
         def __init__(self):
             super(Enemy, self).__init__()
-            self.surf = pygame.image.load("misile_v1.png").convert()
+            if background == True:
+                self.surf = pygame.image.load("misile_v1.png").convert()
+            elif background == False:
+                self.surf = pygame.image.load("alien.png").convert()
             self.surf.set_colorkey((255, 255, 255), RLEACCEL)
             self.surf.set_colorkey((0, 0, 0), RLEACCEL)
             self.rect = self.surf.get_rect(
@@ -110,6 +113,7 @@ if __name__ == '__main__':
                 self.surf = pygame.image.load("nube_v1.png").convert()
             elif background == False:
                 self.surf = pygame.image.load("estrella.png").convert()
+                self.surf.set_colorkey((255,255,255), RLEACCEL)
 
             self.surf.set_colorkey((0, 0, 0), RLEACCEL)
             self.rect = self.surf.get_rect(
@@ -305,7 +309,7 @@ while running:
         elif event.type == ADDTIME:
             if background is True:
                 background = False
-                rgb_current = (16, 44, 84)
+                rgb_current = (37, 40, 80)
             elif background is False:
                 background = True
                 rgb_current = (135, 206, 250)
