@@ -349,8 +349,8 @@ while running:
         elif event.type == ADDTIME:
             if background is False:  # dia
                 background = True
-                rgb_current = (135, 206, 250)
-                # screen.blit(modo_noche, (0, 0))
+                #rgb_current = (135, 206, 250)
+                screen.blit(modo_noche, (0, 0))
             elif background is True:  # noche
                 background = False
                 rgb_current = (37, 40, 80)
@@ -397,7 +397,6 @@ while running:
     if pygame.sprite.spritecollideany(player, enemies):
 
         # verlo en consola
-        # If so, then remove the player and stop the loop
         collision_sound.play()
         connexion()
         print("\n--------------------------------------------")
