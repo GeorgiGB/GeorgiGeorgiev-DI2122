@@ -142,7 +142,7 @@ if __name__ == '__main__':
             self.rect = self.surf.get_rect(
                 center=(
                     random.randint(SCREEN_WIDTH + 60, SCREEN_WIDTH + 150),
-                    random.randint(20, SCREE    N_HEIGHT)
+                    random.randint(20, SCREEN_HEIGHT)
                 )
             )
 
