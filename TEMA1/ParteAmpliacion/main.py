@@ -157,7 +157,7 @@ if __name__ == '__main__':
     def marcador(surface, text, text2, size, x, y):
         font = pygame.font.SysFont("serif", size)  # fuente del marcador
         text_surface = font.render("{} : {}".format(text, text2), True,
-                                   (50, 50, 100))  # color y tamaño de la letra
+                                   (255, 255, 100))  # color y tamaño de la letra
         text_rect = text_surface.get_rect()
         text_rect.midright = (x, y)
         surface.blit(text_surface, text_rect)
