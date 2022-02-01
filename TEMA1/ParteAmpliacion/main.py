@@ -74,8 +74,9 @@ if __name__ == '__main__':
                 self.rect.bottom = SCREEN_HEIGHT
 
         def disparoMisil(self):
-            muni = Missiles(self.rect.centerx, self.rect.centery) #municion
+            muni = Missiles(self.rect.centerx, self.rect.centery)  # municion
             misil.add(muni)
+
 
     class Missiles(pygame.sprite.Sprite):
         def __init__(self, x, y):
@@ -122,7 +123,7 @@ if __name__ == '__main__':
                 for e in enemies:
                     if e.rect.right <= 1:
                         score += 10
-                        if score % 500 == 0:
+                        if score % 200 == 0:
                             nivel += 1
                 self.kill()
 
@@ -150,7 +151,6 @@ if __name__ == '__main__':
             self.rect.move_ip(-5, 0)
             if self.rect.right < 0:
                 self.kill()
-
 
 
     # Primer ejercicio y nivel
@@ -241,7 +241,7 @@ pygame.time.set_timer(ADDCLOUD, 1000)
 
 # Cambio de fondo del juego
 ADDTIME = pygame.USEREVENT + 3
-pygame.time.set_timer(ADDTIME, 10000)
+pygame.time.set_timer(ADDTIME, 4000)
 
 ADDMISIL = pygame.USEREVENT + 4
 pygame.time.set_timer(ADDMISIL, 2000)
@@ -344,27 +344,28 @@ while running:
             new_enemy = Enemy()
             enemies.add(new_enemy)
             all_sprites.add(new_enemy)
-
-        # Add a new background
-        elif event.type == ADDTIME:
-            if background is False:  # dia
-                background = True
-                #rgb_current = (135, 206, 250)
-                screen.blit(modo_noche, (0, 0))
-            elif background is True:  # noche
-                background = False
-                rgb_current = (37, 40, 80)
-                # screen.blit(modo_dia, (0, 0))
-        # Add a new cloud
+            # Add a new cloud
         elif event.type == ADDCLOUD:
             # Create the new cloud and add it to sprite groups
             new_cloud = Cloud()
             clouds.add(new_cloud)
             all_sprites.add(new_cloud)
 
-    screen.fill(rgb_current)
+    # Add a new background
+    if event.type == ADDTIME:
+        if background is False:  # dia
+            background = True
+            modo_noche = pygame.image.load("nightmode.png")
+            screen.blit(modo_noche, (0, 0))
+        elif background is True:  # noche
+            background = False
+            # rgb_current = (37, 40, 80)
+            modo_dia = pygame.image.load("daymode.png")
 
-# Get the set of keys pressed and check for user input
+
+    screen.blit(modo_dia, (0, 0))
+
+    # Get the set of keys pressed and check for user input
     pressed_keys = pygame.key.get_pressed()
     player.update(pressed_keys)
 
@@ -374,7 +375,7 @@ while running:
     # Update enemy position
     enemies.update()
 
-    #Update misiles
+    # Update misiles
     misil.update()
 
     misil.draw(screen)
